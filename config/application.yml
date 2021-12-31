@@ -1,0 +1,76 @@
+application:
+  name: MAIL REPORT
+  channel: SYSTEM
+  organization: NEO JSC
+  version: 1.0
+  company: NEO JSC
+  team: NEO team
+app:
+  send-mail:
+    get-mail: begin ?:= job_mail_report.get_mail(); end;
+    update-mail: begin ?:= job_mail_report.update_mail(?); end;
+  cluster:
+    cluster-name: Extend-Cluster
+    timeout: 1000
+    node-id: extend
+    host: localhost
+    port: 6789
+    check-interval: 1000
+    members:
+      - node-id: extend
+        host: localhost
+        port: 6789
+  schedule:
+
+  config:
+    params:
+      max-execute-size: 2
+
+logging:
+  config: config/log4j2.xml
+
+spring:
+  mail:
+    host: localhost
+    port: 2325
+    alias: OCS Support System
+    alias-group: WEB_ADMIN`a
+    alias-key: ALIAS_MAIL
+    username: c2.monre.nc1@gmail.com
+    password: c2.monre.nc1
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  task:
+    scheduling:
+      pool:
+        size: 5
+  main:
+    banner-mode: console
+  datasource:
+    jdbc-url: jdbc:oracle:thin:@(DESCRIPTION =(ADDRESS_LIST =(ADDRESS =(PROTOCOL=TCP)(HOST=10.252.10.202)(PORT=1521)))(CONNECT_DATA=(SID=WB8NC1)(SERVER=DEDICATED)))
+    username: QLGSCS
+    password: qlgscs123
+    driver-class-name: oracle.jdbc.driver.OracleDriver
+    connection-timeout: 20000
+    minimum-idle: 1
+    maximum-pool-size: 256
+    idle-timeout: 10000
+    max-lifetime: 2000
+    pool-name: Job-Extend
+    data-source-properties: v$session.program=Job-Extend
+  datasource-log:
+    jdbc-url: jdbc:oracle:thin:@(DESCRIPTION =(ADDRESS_LIST =(ADDRESS =(PROTOCOL=TCP)(HOST=10.252.10.202)(PORT=1521)))(CONNECT_DATA=(SID=WB8NC1)(SERVER=DEDICATED)))
+    username: QLGSCS
+    password: qlgscs123
+    driver-class-name: oracle.jdbc.driver.OracleDriver
+    connection-timeout: 20000
+    minimum-idle: 1
+    maximum-pool-size: 256
+    idle-timeout: 10000
+    max-lifetime: 2000
+    pool-name: Job-Extend
+    data-source-properties: v$session.program=Job-Extend

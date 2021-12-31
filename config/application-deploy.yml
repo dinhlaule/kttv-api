@@ -1,0 +1,115 @@
+application:
+  name: MAIL REPORT
+  channel: SYSTEM
+  organization: NEO JSC
+  version: 1.0
+  company: NEO JSC
+  team: NEO team
+app:
+  redis:
+    vaild-connect-redis: true
+    sentinels:
+      read-slave-node: true
+      interval-ping-redis: 10000
+      master-name: REDIS_REG
+      node:
+        - host: osprds01
+          port: 26379
+        - host: osprds02
+          port: 26379
+        - host: osprds03
+          port: 26379
+    timeout: 1000
+    pool-config:
+      max-total: 10
+      max-idle: 3000
+      min-idle: 5
+      max-wait-millis: 1000
+      test-on-borrow: false
+      test-on-return: false
+      test-while-idle: true
+      num-tests-per-eviction-run: 8
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+  cluster:
+    cluster-name: JobExtend-Cluster
+    timeout: 1000
+    node-id: ospcore05
+    host: ospcore05
+    port: 20000
+    check-interval: 1000
+    members:
+      - node-id: ospcore05
+        host: ospcore05
+        port: 20000
+      - node-id: ospcore06
+        host: ospcore06
+        port: 20000
+      - node-id: ospcore07
+        host: ospcore07
+        port: 20000
+      - node-id: ospcore08
+        host: ospcore08
+        port: 20000
+  schedule:
+    core-pool-size: 100
+    maximum-pool-size: 200
+    time-keep-alive: 8
+    unit: hours
+    continue-task-after-shutdown: true
+    remove-on-cancel-policy: true
+  config:
+    params:
+      max-extension-size: 2000
+      max-task-thread: 10000
+      max-row-numb: 1000
+    proc:
+      get-list-params: ?=call PKG_BHM.GET_BHM_PARAMS()
+      get-list-subscriber: ?=call PKG_BHM.GET_LIST_SUBSCRIBER(?,?)
+      move-data-to-BhmQueue: ?=call PKG_BHM.MOVE_LIST_SUBSCRIBER(?)
+      get-subscriber-info: SELECT sub_id,TO_CHAR(active_datetime,'yyyymmddhh24miss') active_datetime,mob_type,act_status,cen_code FROM subscriber WHERE isdn=? AND act_status <> '04'
+      update-subscriber-info: UPDATE subscriber SET org_mob_type=?,mob_type=?,preload_amount='1',notes=? WHERE sub_id=? AND act_status <> '04'
+      delete-prom-his: DELETE prom_history WHERE sub_id=? AND issue_datetime>=TO_DATE(?,'yyyymmddhh24miss')
+      delete-prom-his-schedule: DELETE prom_history_schedule WHERE sub_id=? AND issue_datetime>=TO_DATE(?,'yyyymmddhh24miss')
+      insert-prom-history: INSERT INTO prom_history (prom_history_id,sub_id,mob_type,act_status,prom_code, pp_dtl_id,ord_id,issue_datetime,card_number,card_value, isdn,status,num_refill,segment_id,cen_code,prom_datetime) VALUES (PROM_HISTORY_SEQ.nextval,?,?,?,?,?,?,sysdate,'999999999',1,?,1,1,?,?,sysdate)
+      insert-spe-list: INSERT INTO spe_list_dtl (id,isdn,spe_list_id,sta_date) VALUES (spe_list_dtl_seq.nextval,?,?,sysdate)
+      update-sub-refill-count: UPDATE sub_refill_count set num_refill=1 where sub_id=?
+logging:
+  config: config/log4j2.xml
+
+spring:
+  task:
+    scheduling:
+      pool:
+        size: 5
+  main:
+    banner-mode: console
+  datasource:
+    jdbc-url: jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=ospadb01-vip)(PORT=1521))(ADDRESS=(PROTOCOL=TCP)(HOST=ospadb02-vip)(PORT=1521))(LOAD_BALANCE=true)(FAILOVER=true)(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=ocs)(FAILOVER_MODE=(TYPE=SELECT)(METHOD=BASIC))))
+    username: ocs
+    password: ocssupport123
+    driver-class-name: oracle.jdbc.driver.OracleDriver
+    connection-timeout: 20000
+    minimum-idle: 1
+    maximum-pool-size: 256
+    idle-timeout: 10000
+    max-lifetime: 2000
+    pool-name: Job-D0
+    data-source-properties: v$session.program=Job-D0
+  datasource-log:
+    jdbc-url: jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=osprdb01-vip)(PORT=1521))(ADDRESS=(PROTOCOL=TCP)(HOST=osprdb01-vip)(PORT=1521))(LOAD_BALANCE=true)(FAILOVER=true)(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=gitlog)(FAILOVER_MODE=(TYPE=SELECT)(METHOD=BASIC))))
+    username: ocs_log
+    password: ocs
+    driver-class-name: oracle.jdbc.driver.OracleDriver
+    connection-timeout: 20000
+    minimum-idle: 1
+    maximum-pool-size: 256
+    idle-timeout: 10000
+    max-lifetime: 2000
+    pool-name: Job-D0
+    data-source-properties: v$session.program=Job-D0
+api:
+  ocs-gateway:
+    url-change-profile: http://ocs-local-vip:9001/ocs-gw/change-profile
+    url-subscriber-bundle: http://ocs-local-vip:9001/ocs-gw/subscriber-bundle
+    url-update-homezone: http://ocs-local-vip:18088/ocs-gw/update-home-zone
